@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        *{
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        canvas{
+            margin: 20px auto;
+            display: block;
+            background-color: #ffffff;
+            border: 1px solid #000;
+        }
+        button{
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h3>Chúc bạn vui vẻ</h3>
+    <p>
+        Màu nền:<input type="color" id="txtNen" value="#ffffff">
+        Màu X: <input type="color" id="txtX" value="#0000ff">
+        Màu O:<input type="color" id="txtO" value="#ff0000"></p>
+    <canvas id="ticTacToe" width="300" height="300"></canvas>
+    <button id="resetButton">Chơi lại</button>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        //khởi tạo và cài đặt ban đầu
+           $(document).ready(function() {
+            const canvas = $('#ticTacToe')[0];
+            const context = canvas.getContext('2d');
+            let board = ['', '', '', '', '', '', '', '', ''];
+            let currentPlayer = 'X';
+            let gameActive = true;
+
+            const cellSize = canvas.width / 3; // chia kích thước thành 3x3
+            //vex bàn
+            function drawBoard() {
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.strokeStyle = '#000';
+                context.lineWidth = 1;
+              
+                // vẽ các đường kẻ dọc và ngang trên bàn cờ
+                for (let i = 1; i < 3; i++) {
+                    context.beginPath();
+                    context.moveTo(cellSize * i, 0);
+                    context.lineTo(cellSize * i, canvas.height);
+                    context.stroke();
+                    context.beginPath();
+                    context.moveTo(0, cellSize * i);
+                    context.lineTo(canvas.width, cellSize * i);
+                    context.stroke();
+                }
+                // kiểm tra nếu ô không rôngx thì gọi hàm drawmark để vẽ x hoặc o
+                for (let i = 0; i < board.length; i++) {
+                    if (board[i] !== '') {
+                        drawMark(i, board[i]);
+                    }
+                }
+            }
+            // vẽ X o
+            function drawMark(index, player) {
+                const x = (index % 3) * cellSize;/// tính toán vị trí x
+                const y = Math.floor(index / 3) * cellSize;
+                context.fillStyle = player === 'X' ? $('#txtX').val() : $('#txtO').val();
+                context.font = '80px Arial';
+                context.textAlign = 'center';
+                context.textBaseline = 'middle';
+                context.fillText(player, x + cellSize / 2, y + cellSize / 2);
+            }
+            function checkWin() {
+                const winConditions = [
+                    [0, 1, 2], [3, 4, 5], [6, 7, 8], // Hàng ngang
+                    [0, 3, 6], [1, 4, 7], [2, 5, 8], // Hàng dọc
+                    [0, 4, 8], [2, 4, 6]              // Đường chéo
+                ];
+
+                for (const condition of winConditions) {
+                    const [a, b, c] = condition;
+                    if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                        return board[a];
+                    }
+                }
+                return board.includes('') ? null : 'Hòa';
+
+            }
+                //Xử lý sự kiện khi người chơi click
+                function handleClick(event) {
+                    if (!gameActive) return;
+
+                    const rect = canvas.getBoundingClientRect();
+                    const x = event.clientX - rect.left;
+                    const y = event.clientY - rect.top;
+                    const index = Math.floor(x / cellSize) + Math.floor(y / cellSize) * 3;
+                    
+                    //Nếu ô cờ trống, cập nhật bảng và vẽ dấu.
+                    if (board[index] === '') {
+                        board[index] = currentPlayer;
+                        drawMark(index, currentPlayer);
+                        
+                        const result = checkWin();
+                        if (result) {
+                            gameActive = false;
+                            setTimeout(() => alert(result === 'Hòa' ? 'Trò chơi hòa!' : `${result} thắng!`), 100);
+                        } else {
+                            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                        }
+                    }
+                }
+
+                $('#resetButton').click(function() {
+                    board = ['', '', '', '', '', '', '', '', ''];
+                    currentPlayer = 'X';
+                    gameActive = true;
+                    drawBoard();
+                });
+                // thay đổi màu nền
+                $('#txtNen').change(function() {
+                    canvas.style.backgroundColor = $(this).val();
+                });
+                // thay đổi màu của X và O
+                $('#txtX, #txtO').change(function() {
+                    drawBoard();
+                });
+
+                canvas.addEventListener('click', handleClick);
+
+                drawBoard();
+           });
+    </script>
+</body>
+</html>
